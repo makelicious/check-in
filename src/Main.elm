@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html exposing (Html, text, div, h1, img)
@@ -9,7 +9,6 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Border as Border
-import Maybe exposing (Maybe)
 
 ---- PROGRAM ----
 
@@ -30,13 +29,17 @@ type alias Question =
     , question : String
     }
 
+type alias AnsweredQuestion =
+    { question: String
+    , choice: String
+    }
 
 type alias Model =
     { currentQuestion : Question
     , questions : List Question
     , title : String
+    , answeredQuestions : List AnsweredQuestion
     }
-
 
 init : ( Model, Cmd Msg )
 init
@@ -56,6 +59,7 @@ init
                 }
             ]
         , title = "Good stuff"
+        , answeredQuestions = []
     }, Cmd.none)
 
 
@@ -65,11 +69,16 @@ init
 
 type Msg
     = NoOp
+    | SaveAnswer AnsweredQuestion
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        SaveAnswer answer ->
+            ( { model | answeredQuestions = answer :: model.answeredQuestions }, Cmd.none )
+        NoOp ->
+            ( model, Cmd.none )
 
 
 
@@ -83,7 +92,7 @@ view model =
     ]
     (viewWrapper model)
 
-viewWrapper : Model -> Element msg
+viewWrapper : Model -> Element Msg
 viewWrapper model =
     column
         [ centerX
@@ -105,7 +114,7 @@ viewTitle title =
         ]
         (text (title))
 
-viewContent : Question -> Element msg
+viewContent : Question -> Element Msg
 viewContent question =
     column
         [ centerX
@@ -115,7 +124,7 @@ viewContent question =
         , Background.color (rgb255 255 255 255)
         , Border.rounded 10
         ]
-        [viewProgressSection, (viewQuestionTitle question.question), (viewButtonRow question.choices)]
+        [viewProgressSection, (viewQuestionTitle question.question), (viewButtonRow question)]
 
 viewQuestionTitle : String -> Element msg
 viewQuestionTitle questionTitle =
@@ -168,13 +177,14 @@ viewPercentualProgress =
     el
         [] (text "87%")
 
-viewButtonRow : List String -> Element msg
-viewButtonRow choices =
-    row [width fill, centerY, centerX, spacing 30 ]
-    (List.map viewButton choices)
+viewButtonRow : Question -> Element Msg
+viewButtonRow question =
+        row [width fill, centerY, centerX, spacing 30 ]
+        (renderViewButtons question question.choices)
 
-viewButton : String -> Element msg
-viewButton buttonText = Input.button
+renderViewButtons : Question -> List String -> List (Element Msg)
+renderViewButtons question choices =
+    List.map (\choice -> Input.button
             [ Background.color(rgb255 233 233 233)
             , paddingEach
                 { top = 20
@@ -184,6 +194,7 @@ viewButton buttonText = Input.button
                 }
             , Border.rounded 30
         ]
-        { onPress = Nothing
-        , label = Element.text buttonText
+        { onPress = Just (SaveAnswer { choice = choice, question = question.question })
+        , label = Element.text choice
         }
+    ) choices
