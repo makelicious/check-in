@@ -26,18 +26,37 @@ main =
 ---- MODEL ----
 
 type alias Question =
-    {
-        title : String
-    ,   choices : List String
+    { choices : List String
+    , question : String
     }
 
 
-type alias Model = Question
+type alias Model =
+    { currentQuestion : Question
+    , questions : List Question
+    , title : String
+    }
 
 
 init : ( Model, Cmd Msg )
-init =
-    ( {title = "Name", choices = ["yy", "kaa", "koo"]}, Cmd.none )
+init
+    = (
+    { currentQuestion =
+        { question = "what"
+        , choices = ["yy", "kaa", "koo"]
+        }
+        , questions =
+            [
+                { question = "what is"
+                , choices = ["yy", "kaa", "koo"]
+                }
+                ,
+                { question = "where is"
+                , choices = ["nee", "vii", "kuu"]
+                }
+            ]
+        , title = "Good stuff"
+    }, Cmd.none)
 
 
 
@@ -62,27 +81,15 @@ view model =
     Element.layout [
         Background.color (rgb255 233 233 233)
     ]
-    (wrapper model)
+    (viewWrapper model)
 
-wrapper : Model -> Element msg
-wrapper model =
+viewWrapper : Model -> Element msg
+viewWrapper model =
     column
         [ centerX
         , centerY
         ]
-        [(viewTitle (model.title)), (box (model.choices)), questionBox]
-
-questionBox : Element msg
-questionBox =
-    row
-        [ alignTop
-        , paddingEach
-            { top = 0
-            , right = 0
-            , bottom = 30
-            , left = 0
-            }
-        ][]
+        [(viewTitle (model.title)), (viewContent (model.currentQuestion)), (viewQuestionBox)]
 
 viewTitle : String -> Element msg
 viewTitle title =
@@ -98,8 +105,8 @@ viewTitle title =
         ]
         (text (title))
 
-box : List String -> Element msg
-box choices =
+viewContent : Question -> Element msg
+viewContent question =
     column
         [ centerX
         , centerY
@@ -108,26 +115,46 @@ box choices =
         , Background.color (rgb255 255 255 255)
         , Border.rounded 10
         ]
-        [progressSection, viewQuestion, (buttonRow choices)]
+        [viewProgressSection, (viewQuestionTitle question.question), (viewButtonRow question.choices)]
 
+viewQuestionTitle : String -> Element msg
+viewQuestionTitle questionTitle =
+    el
+        [ alignTop
+        , padding 30
+        , centerX
+        ]
+        (text questionTitle)
 
-progressSection : Element msg
-progressSection =
+viewQuestionBox : Element msg
+viewQuestionBox =
+    row
+        [ alignTop
+        , paddingEach
+            { top = 0
+            , right = 0
+            , bottom = 30
+            , left = 0
+            }
+        ][]
+
+viewProgressSection : Element msg
+viewProgressSection =
     row
         [ centerY
         , spacing 30
         , width fill
         ]
-        [numericalProgress, progressBar, percentualProgress]
+        [viewNumericalProgress, viewProgressBar, viewPercentualProgress]
 
-numericalProgress : Element msg
-numericalProgress =
+viewNumericalProgress : Element msg
+viewNumericalProgress =
     el
         []
         (text "13 out of 15")
 
-progressBar : Element msg
-progressBar =
+viewProgressBar : Element msg
+viewProgressBar =
     el
         [ width (px 300)
         , height (px 30)
@@ -136,22 +163,13 @@ progressBar =
     ] (text "")
 
 
-percentualProgress : Element msg
-percentualProgress =
+viewPercentualProgress : Element msg
+viewPercentualProgress =
     el
         [] (text "87%")
 
-viewQuestion : Element msg
-viewQuestion =
-    el
-        [ alignTop
-        , padding 30
-        , centerX
-        ]
-        (text "Lorem ipsum dolor ember")
-
-buttonRow : List String -> Element msg
-buttonRow choices =
+viewButtonRow : List String -> Element msg
+viewButtonRow choices =
     row [width fill, centerY, centerX, spacing 30 ]
     (List.map viewButton choices)
 
