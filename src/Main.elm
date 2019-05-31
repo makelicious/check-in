@@ -101,7 +101,7 @@ viewWrapper model currentQuestion =
         [ centerX
         , centerY
         ]
-        [(viewTitle (model.title)), (viewContent (currentQuestion)), (viewQuestionBox)]
+        [(viewTitle model.title), (viewContent model currentQuestion), (viewQuestionBox)]
 
 viewTitle : String -> Element msg
 viewTitle title =
@@ -117,8 +117,8 @@ viewTitle title =
         ]
         (text (title))
 
-viewContent : Question -> Element Msg
-viewContent question =
+viewContent : Model -> Question -> Element Msg
+viewContent model question =
     column
         [ centerX
         , centerY
@@ -127,7 +127,7 @@ viewContent question =
         , Background.color (rgb255 255 255 255)
         , Border.rounded 10
         ]
-        [viewProgressSection, (viewQuestionTitle question.question), (viewButtonRow question)]
+        [(viewProgressSection model), (viewQuestionTitle question.question), (viewButtonRow question)]
 
 viewQuestionTitle : String -> Element msg
 viewQuestionTitle questionTitle =
@@ -150,20 +150,24 @@ viewQuestionBox =
             }
         ][]
 
-viewProgressSection : Element msg
-viewProgressSection =
+viewProgressSection : Model -> Element msg
+viewProgressSection model =
     row
         [ centerY
         , spacing 30
         , width fill
         ]
-        [viewNumericalProgress, viewProgressBar, viewPercentualProgress]
+        [(viewNumericalProgress model), viewProgressBar, (viewPercentualProgress model)]
 
-viewNumericalProgress : Element msg
-viewNumericalProgress =
+viewNumericalProgress : Model -> Element msg
+viewNumericalProgress model =
+    let
+        noOfAnswered = String.fromInt (List.length model.answeredQuestions + 1)
+        totalQuestions = String.fromInt (List.length model.answeredQuestions + List.length model.questions)
+    in
     el
         []
-        (text "13 out of 15")
+        (text (noOfAnswered ++ " out of " ++ totalQuestions))
 
 viewProgressBar : Element msg
 viewProgressBar =
@@ -175,10 +179,13 @@ viewProgressBar =
     ] (text "")
 
 
-viewPercentualProgress : Element msg
-viewPercentualProgress =
+viewPercentualProgress : Model -> Element msg
+viewPercentualProgress model =
+    let
+        percentage = String.fromFloat ((toFloat (List.length model.answeredQuestions) / toFloat (List.length model.questions) ))
+    in
     el
-        [] (text "87%")
+        [] (text (percentage ++ "%"))
 
 viewButtonRow : Question -> Element Msg
 viewButtonRow question =
