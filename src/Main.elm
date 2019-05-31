@@ -35,7 +35,7 @@ type alias AnsweredQuestion =
     }
 
 type alias Model =
-    { currentQuestion : Question
+    { currentQuestion : Maybe Question
     , questions : List Question
     , title : String
     , answeredQuestions : List AnsweredQuestion
@@ -44,10 +44,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init
     = (
-    { currentQuestion =
-        { question = "what"
-        , choices = ["yy", "kaa", "koo"]
-        }
+    { currentQuestion = Nothing
         , questions =
             [
                 { question = "what is"
@@ -76,10 +73,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SaveAnswer answer ->
-            ( { model | answeredQuestions = answer :: model.answeredQuestions }, Cmd.none )
+            ( { model | answeredQuestions = answer :: model.answeredQuestions, questions = List.drop 1 model.questions }, Cmd.none)
         NoOp ->
             ( model, Cmd.none )
-
 
 
 ---- VIEW ----
@@ -87,18 +83,25 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    let
+        viewRendered =
+            case (List.head model.questions) of
+                Nothing ->
+                    (el [] (text "13 out of 15"))
+                Just val ->
+                    (viewWrapper model val)
+    in
     Element.layout [
         Background.color (rgb255 233 233 233)
-    ]
-    (viewWrapper model)
+    ] viewRendered
 
-viewWrapper : Model -> Element Msg
-viewWrapper model =
+viewWrapper : Model -> Question -> Element Msg
+viewWrapper model currentQuestion =
     column
         [ centerX
         , centerY
         ]
-        [(viewTitle (model.title)), (viewContent (model.currentQuestion)), (viewQuestionBox)]
+        [(viewTitle (model.title)), (viewContent (currentQuestion)), (viewQuestionBox)]
 
 viewTitle : String -> Element msg
 viewTitle title =
