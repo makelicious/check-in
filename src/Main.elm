@@ -1,6 +1,8 @@
 port module Main exposing (..)
 
 import Browser
+import Browser.Navigation as Nav
+import Url
 import Html exposing (Html, text, div, h1, img)
 import Html.Attributes exposing (src)
 import Element exposing (Element, el, text, row, column, alignRight, alignLeft, fill, width, rgb255, rgba, spacing, centerY, padding, centerX, centerY, alignTop, height, px, paddingEach, paddingXY)
@@ -16,11 +18,13 @@ import Element.Font as Font
 
 main : Program () Model Msg
 main =
-    Browser.element
+    Browser.application
         { view = view
-        , init = \_ -> init
+        , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
+        , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
         }
 
 ---- MODEL ----
@@ -40,16 +44,18 @@ type alias Model =
     , questions : List Question
     , title : String
     , answeredQuestions : List AnsweredQuestion
+    , url: Url.Url
+    , key: Nav.Key
     }
 
-init : ( Model, Cmd Msg )
-init
+init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key
     = (
     { currentQuestion = Nothing
         , questions =
             [
                 { question = "what is"
-                , choices = ["yy", "kaa", "koo"]
+                , choices = ["yy kaa koo nee", "yy kaa koo nee", "yy kaa koo nee", "kaa koo nee vii", "koo nee vii kuu"]
                 }
                 ,
                 { question = "where is"
@@ -58,6 +64,8 @@ init
             ]
         , title = "Good stuff"
         , answeredQuestions = []
+        , key = key
+        , url = url
     }, Cmd.none)
 
 
@@ -68,21 +76,40 @@ init
 type Msg
     = NoOp
     | SaveAnswer AnsweredQuestion
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+                Browser.External href ->
+                    ( model, Nav.load href )
+        UrlChanged url ->
+            ( { model | url = url }
+            , Cmd.none
+            )
         SaveAnswer answer ->
             ( { model | answeredQuestions = answer :: model.answeredQuestions, questions = List.drop 1 model.questions }, Cmd.none)
         NoOp ->
             ( model, Cmd.none )
 
 
+
+---- SUBSCRIPTIONS ----
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  Sub.none
+
+
 ---- VIEW ----
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
     let
         viewRendered =
@@ -95,9 +122,12 @@ view model =
                     , (viewWrapper model val)
                     ]
     in
-    Element.layout [
+    { title = "Check me outside"
+    , body = [ Element.layout [
         Background.color (rgb255 255 255 255)
     ] viewRendered
+    ]
+    }
 
 viewWrapper : Model -> Question -> Element Msg
 viewWrapper model currentQuestion =
