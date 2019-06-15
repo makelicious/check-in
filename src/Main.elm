@@ -3,12 +3,13 @@ port module Main exposing (..)
 import Browser
 import Html exposing (Html, text, div, h1, img)
 import Html.Attributes exposing (src)
-import Element exposing (Element, el, text, row, column, alignRight, fill, width, rgb255, spacing, centerY, padding, centerX, centerY, alignTop, height, px, paddingEach)
+import Element exposing (Element, el, text, row, column, alignRight, alignLeft, fill, width, rgb255, rgba, spacing, centerY, padding, centerX, centerY, alignTop, height, px, paddingEach, paddingXY)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Border as Border
+import Element.Font as Font
 
 ---- PROGRAM ----
 
@@ -89,10 +90,13 @@ view model =
                 Nothing ->
                     (el [] (text "13 out of 15"))
                 Just val ->
-                    (viewWrapper model val)
+                    column [ width fill ]
+                    [ (viewTitleWapper model.title)
+                    , (viewWrapper model val)
+                    ]
     in
     Element.layout [
-        Background.color (rgb255 233 233 233)
+        Background.color (rgb255 255 255 255)
     ] viewRendered
 
 viewWrapper : Model -> Question -> Element Msg
@@ -101,40 +105,44 @@ viewWrapper model currentQuestion =
         [ centerX
         , centerY
         ]
-        [(viewTitle model.title), (viewContent model currentQuestion), (viewQuestionBox)]
+        [(viewContent model currentQuestion), (viewQuestionBox)]
 
-viewTitle : String -> Element msg
-viewTitle title =
+viewTitleWapper : String -> Element Msg
+viewTitleWapper title =
     el
         [ width fill
-        , alignTop
-        , paddingEach
-            { top = 0
-            , right = 0
-            , bottom = 30
-            , left = 0
-            }
+        , paddingXY 0 30
+        , Font.color (rgb255 255 255 255)
+        , Font.size 48
+        , Background.color (rgb255 92 164 169)
         ]
-        (text (title))
+        (viewTitle title)
+
+viewTitle : String -> Element Msg
+viewTitle title =
+    el
+        [ alignLeft, paddingXY 64 0]
+        (text title)
 
 viewContent : Model -> Question -> Element Msg
 viewContent model question =
     column
         [ centerX
         , centerY
-        , padding 30
-        , spacing 200
+        , padding 64
+        , spacing 32
         , Background.color (rgb255 255 255 255)
         , Border.rounded 10
         ]
-        [(viewProgressSection model), (viewQuestionTitle question.question), (viewButtonRow question)]
+        [(viewQuestionTitle question.question), (viewButtonRow question)]
 
 viewQuestionTitle : String -> Element msg
 viewQuestionTitle questionTitle =
     el
         [ alignTop
-        , padding 30
-        , centerX
+        , alignLeft
+        , paddingXY 0 32
+        , Font.size 32
         ]
         (text questionTitle)
 
@@ -154,7 +162,7 @@ viewProgressSection : Model -> Element msg
 viewProgressSection model =
     row
         [ centerY
-        , spacing 30
+        , spacing 32
         , width fill
         ]
         [(viewNumericalProgress model), viewProgressBar, (viewPercentualProgress model)]
@@ -173,9 +181,9 @@ viewProgressBar : Element msg
 viewProgressBar =
     el
         [ width (px 300)
-        , height (px 30)
+        , height (px 32)
         , Background.color (rgb255 233 233 233)
-        , Border.rounded 30
+        , Border.rounded 32
     ] (text "")
 
 
@@ -195,14 +203,25 @@ viewButtonRow question =
 renderViewButtons : Question -> List String -> List (Element Msg)
 renderViewButtons question choices =
     List.map (\choice -> Input.button
-            [ Background.color(rgb255 233 233 233)
-            , paddingEach
-                { top = 20
-                , right = 30
-                , bottom = 20
-                , left = 30
+            [ Background.color (rgb255 209 227 229)
+            , paddingXY 48 24
+            , Border.rounded 8
+            , Border.shadow
+                { offset = (1, 2)
+                , color = (rgba 0 0 0 0.2)
+                , size = 1
+                , blur = 3
                 }
-            , Border.rounded 30
+            , Element.mouseOver
+                [ Background.color (rgb255 25 115 125)
+                , Border.shadow
+                    { offset = (0, 0)
+                    , color = (rgba 0 0 0 0.0)
+                    , size = 0
+                    , blur = 0
+                    }
+                , Font.color (rgb255 255 255 255)
+            ]
         ]
         { onPress = Just (SaveAnswer { choice = choice, question = question.question })
         , label = Element.text choice
