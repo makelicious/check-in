@@ -153,47 +153,10 @@ viewQuestionBox =
         , paddingEach
             { top = 0
             , right = 0
-            , bottom = 30
+            , bottom = 32
             , left = 0
             }
         ][]
-
-viewProgressSection : Model -> Element msg
-viewProgressSection model =
-    row
-        [ centerY
-        , spacing 32
-        , width fill
-        ]
-        [(viewNumericalProgress model), viewProgressBar, (viewPercentualProgress model)]
-
-viewNumericalProgress : Model -> Element msg
-viewNumericalProgress model =
-    let
-        noOfAnswered = String.fromInt (List.length model.answeredQuestions + 1)
-        totalQuestions = String.fromInt (List.length model.answeredQuestions + List.length model.questions)
-    in
-    el
-        []
-        (text (noOfAnswered ++ " out of " ++ totalQuestions))
-
-viewProgressBar : Element msg
-viewProgressBar =
-    el
-        [ width (px 300)
-        , height (px 32)
-        , Background.color (rgb255 233 233 233)
-        , Border.rounded 32
-    ] (text "")
-
-
-viewPercentualProgress : Model -> Element msg
-viewPercentualProgress model =
-    let
-        percentage = String.fromFloat ((toFloat (List.length model.answeredQuestions) / toFloat (List.length model.questions) ))
-    in
-    el
-        [] (text (percentage ++ "%"))
 
 viewButtonRow : Question -> Element Msg
 viewButtonRow question =
